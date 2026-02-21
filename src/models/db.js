@@ -7,43 +7,41 @@ const client = createClient({
 });
 
 async function initSchema() {
-  await client.executeMultiple(`
-    CREATE TABLE IF NOT EXISTS users (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      name          TEXT    NOT NULL,
-      email         TEXT    NOT NULL UNIQUE,
-      password_hash TEXT    NOT NULL,
-      role          TEXT    NOT NULL,
-      created_at    TEXT    DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS checklists (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      title      TEXT    NOT NULL,
-      created_by INTEGER NOT NULL,
-      created_at TEXT    DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS checklist_items (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      checklist_id INTEGER NOT NULL,
-      text         TEXT    NOT NULL,
-      item_order   INTEGER NOT NULL DEFAULT 0
-    );
-    CREATE TABLE IF NOT EXISTS checklist_responses (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      checklist_id INTEGER NOT NULL,
-      loja_id      INTEGER NOT NULL,
-      status       TEXT    NOT NULL DEFAULT 'pending',
-      completed_at TEXT,
-      UNIQUE(checklist_id, loja_id)
-    );
-    CREATE TABLE IF NOT EXISTS checklist_response_items (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      response_id INTEGER NOT NULL,
-      item_id     INTEGER NOT NULL,
-      checked     INTEGER NOT NULL DEFAULT 0,
-      UNIQUE(response_id, item_id)
-    );
-  `);
+  await client.execute(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`);
+  await client.execute(`CREATE TABLE IF NOT EXISTS checklists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`);
+  await client.execute(`CREATE TABLE IF NOT EXISTS checklist_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    checklist_id INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    item_order INTEGER NOT NULL DEFAULT 0
+  )`);
+  await client.execute(`CREATE TABLE IF NOT EXISTS checklist_responses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    checklist_id INTEGER NOT NULL,
+    loja_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    completed_at TEXT,
+    UNIQUE(checklist_id, loja_id)
+  )`);
+  await client.execute(`CREATE TABLE IF NOT EXISTS checklist_response_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    response_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    checked INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(response_id, item_id)
+  )`);
 }
 
 const db = {
