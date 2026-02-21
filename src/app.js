@@ -10,7 +10,7 @@ const responseRoutes = require('./routes/responses');
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: '*',
   credentials: true
 }));
 app.use(express.json());
@@ -28,7 +28,9 @@ const PORT = process.env.PORT || 3001;
 
 db.initSchema()
   .then(() => {
-    app.listen(PORT, () => console.log(`Backend rodando em http://localhost:${PORT}`));
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Backend rodando na porta ${PORT}`);
+    });
   })
   .catch(err => {
     console.error('Erro ao inicializar banco:', err);
