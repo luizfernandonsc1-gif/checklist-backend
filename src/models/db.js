@@ -13,6 +13,7 @@ async function initSchema() {
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now'))
   )`);
   await client.execute(`CREATE TABLE IF NOT EXISTS checklists (
@@ -20,6 +21,7 @@ async function initSchema() {
     title TEXT NOT NULL,
     created_by INTEGER NOT NULL,
     is_global INTEGER NOT NULL DEFAULT 1,
+    recurrence TEXT DEFAULT 'none',
     created_at TEXT DEFAULT (datetime('now'))
   )`);
   await client.execute(`CREATE TABLE IF NOT EXISTS checklist_items (
@@ -33,8 +35,9 @@ async function initSchema() {
     checklist_id INTEGER NOT NULL,
     loja_id INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
+    period TEXT DEFAULT 'none',
     completed_at TEXT,
-    UNIQUE(checklist_id, loja_id)
+    UNIQUE(checklist_id, loja_id, period)
   )`);
   await client.execute(`CREATE TABLE IF NOT EXISTS checklist_response_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
