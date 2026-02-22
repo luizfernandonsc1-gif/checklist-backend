@@ -1,5 +1,22 @@
 const db = require('../models/db');
 
+function getCurrentPeriod(recurrence) {
+  const now = new Date();
+  if (recurrence === 'daily') {
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD
+  }
+  if (recurrence === 'weekly') {
+    const day = now.getDay();
+    const diff = now.getDate() - day;
+    const monday = new Date(now.setDate(diff));
+    return monday.toISOString().split('T')[0];
+  }
+  if (recurrence === 'monthly') {
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+  return 'none';
+}
+
 exports.list = async (req, res) => {
   try {
     const checklists = await db.query(`
@@ -25,7 +42,6 @@ exports.list = async (req, res) => {
       };
     }));
 
-    // Se for loja, filtra apenas os checklists que ela tem acesso
     if (req.user.role === 'loja') {
       const filtered = withItems.filter(cl =>
         Number(cl.is_global) === 1 ||
@@ -64,12 +80,12 @@ exports.getOne = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { title, items, is_global, assigned_lojas } = req.body;
+    const { title, items, is_global, assigned_lojas, recurrence } = req.body;
     if (!title) return res.status(400).json({ message: 'Título é obrigatório.' });
 
     const result = await db.run(
-      'INSERT INTO checklists (title, created_by, is_global) VALUES (?, ?, ?)',
-      [title, req.user.id, is_global ? 1 : 0]
+      'INSERT INTO checklists (title, created_by, is_global, recurrence) VALUES (?, ?, ?, ?)',
+      [title, req.user.id, is_global ? 1 : 0, recurrence || 'none']
     );
     const checklistId = result.lastInsertRowid;
 
@@ -111,15 +127,15 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const { title, items, is_global, assigned_lojas } = req.body;
+    const { title, items, is_global, assigned_lojas, recurrence } = req.body;
     const { id } = req.params;
 
     const cl = await db.queryOne('SELECT * FROM checklists WHERE id = ?', [id]);
     if (!cl) return res.status(404).json({ message: 'Checklist não encontrado.' });
 
-    if (title) await db.run(
-      'UPDATE checklists SET title = ?, is_global = ? WHERE id = ?',
-      [title, is_global ? 1 : 0, id]
+    await db.run(
+      'UPDATE checklists SET title = ?, is_global = ?, recurrence = ? WHERE id = ?',
+      [title || cl.title, is_global ? 1 : 0, recurrence || 'none', id]
     );
 
     if (items) {
@@ -174,7 +190,7 @@ exports.remove = async (req, res) => {
 exports.getLojas = async (req, res) => {
   try {
     const lojas = await db.query(
-      "SELECT id, name, email FROM users WHERE role = 'loja' ORDER BY name"
+      "SELECT id, name, email FROM users WHERE role = 'loja' AND active = 1 ORDER BY name"
     );
     res.json(lojas);
   } catch (e) {
