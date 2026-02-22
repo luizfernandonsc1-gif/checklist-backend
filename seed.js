@@ -7,28 +7,42 @@ async function seed() {
 
   const hash = (p) => bcrypt.hashSync(p, 10);
 
-  // Limpa dados existentes
+  await db.run('DELETE FROM checklist_assignments');
   await db.run('DELETE FROM checklist_response_items');
   await db.run('DELETE FROM checklist_responses');
   await db.run('DELETE FROM checklist_items');
   await db.run('DELETE FROM checklists');
   await db.run('DELETE FROM users');
 
-  // Cria usuários
+  // Admin
   await db.run(
     'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-    ['Admin Boticario', 'admin@boticario.com', hash('admin123'), 'admin']
-  );
-  await db.run(
-    'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-    ['Loja Centro', 'loja@boticario.com', hash('loja123'), 'loja']
+    ['Admin', 'admin@boticario.com', hash('admin123'), 'admin']
   );
 
-  const adminUser = await db.queryOne("SELECT id FROM users WHERE role = 'admin'");
+  // 7 Lojas
+  const lojas = [
+    { name: 'Joaçaba',        email: 'joacaba@boticario.com',      senha: 'joacaba123' },
+    { name: 'Caitá',          email: 'caita@boticario.com',         senha: 'caita123' },
+    { name: 'Herval D\'Oeste',email: 'herval@boticario.com',        senha: 'herval123' },
+    { name: 'Capinzal',       email: 'capinzal@boticario.com',      senha: 'capinzal123' },
+    { name: 'Treze Tílias',   email: 'trezetilias@boticario.com',   senha: 'trezetilias123' },
+    { name: 'Campos Novos',   email: 'camposnovos@boticario.com',   senha: 'camposnovos123' },
+    { name: 'Venda Direta',   email: 'vendadireta@boticario.com',   senha: 'vendadireta123' },
+  ];
 
+  for (const loja of lojas) {
+    await db.run(
+      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      [loja.name, loja.email, hash(loja.senha), 'loja']
+    );
+  }
+
+  // Checklist de exemplo global
+  const admin = await db.queryOne("SELECT id FROM users WHERE role = 'admin'");
   const cl = await db.run(
-    'INSERT INTO checklists (title, created_by) VALUES (?, ?)',
-    ['Checklist de Abertura de Loja', adminUser.id]
+    'INSERT INTO checklists (title, created_by, is_global) VALUES (?, ?, ?)',
+    ['Checklist de Abertura de Loja', admin.id, 1]
   );
 
   const items = [
@@ -47,8 +61,9 @@ async function seed() {
   }
 
   console.log('Seed concluido!');
-  console.log('   Admin: admin@boticario.com / admin123');
-  console.log('   Loja:  loja@boticario.com  / loja123');
+  console.log('Admin: admin@boticario.com / admin123');
+  console.log('Lojas criadas:');
+  lojas.forEach(l => console.log(`  ${l.name}: ${l.email} / ${l.senha}`));
   process.exit(0);
 }
 
