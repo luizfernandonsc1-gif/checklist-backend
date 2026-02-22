@@ -19,6 +19,7 @@ async function initSchema() {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     created_by INTEGER NOT NULL,
+    is_global INTEGER NOT NULL DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now'))
   )`);
   await client.execute(`CREATE TABLE IF NOT EXISTS checklist_items (
@@ -41,6 +42,12 @@ async function initSchema() {
     item_id INTEGER NOT NULL,
     checked INTEGER NOT NULL DEFAULT 0,
     UNIQUE(response_id, item_id)
+  )`);
+  await client.execute(`CREATE TABLE IF NOT EXISTS checklist_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    checklist_id INTEGER NOT NULL,
+    loja_id INTEGER NOT NULL,
+    UNIQUE(checklist_id, loja_id)
   )`);
 }
 
